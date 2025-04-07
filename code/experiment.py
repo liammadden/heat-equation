@@ -7,12 +7,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as torch_data
+from crank_nicolson import make_data
 from haven import haven_utils as hu
-from nltk.tokenize import wordpunct_tokenize
+from lstm_model import LSTMModel
 from plotting import plot_experiment
 from run import Run
-from crank_nicolson import make_data
-from lstm_model import LSTMModel
+
 
 @dataclass
 class Experiment:
@@ -35,16 +35,36 @@ class Experiment:
         if plot_only is False:
             ### Create data
             np.random.seed(0)
-            u = make_data(self.n_x, self.n_t, self.c_x, self.c_t, self.r, self.u_min, self.u_max, self.num_samples)
+            u = make_data(
+                self.n_x,
+                self.n_t,
+                self.c_x,
+                self.c_t,
+                self.r,
+                self.u_min,
+                self.u_max,
+                self.num_samples,
+            )
             self.training_data = torch.tensor(u).to(torch.float32)
-            u = make_data(self.n_x, self.n_t, self.c_x, self.c_t, self.r, self.u_min, self.u_max, 1000)
+            u = make_data(
+                self.n_x,
+                self.n_t,
+                self.c_x,
+                self.c_t,
+                self.r,
+                self.u_min,
+                self.u_max,
+                1000,
+            )
             self.test_data = torch.tensor(u).to(torch.float32)
             ### Iterate runs
             for run_num, run in enumerate(self.runs):
                 torch.manual_seed(0)
                 print("-----Run " + str(run_num + 1) + "-----")
                 ### Train model
-                run.model = LSTMModel(input_size=self.n_x, hidden_size=run.m, output_size=self.n_x).to(device)
+                run.model = LSTMModel(
+                    input_size=self.n_x, hidden_size=run.m, output_size=self.n_x
+                ).to(device)
                 run.num_params = sum(p.numel() for p in run.model.parameters())
                 print("Number of parameters: " + str(run.num_params))
                 run.training_losses, run.test_losses = self.train(run, device)
@@ -70,9 +90,11 @@ class Experiment:
             batch_size = self.batch_size
 
         criterion = nn.MSELoss()
-        step_size = .001
+        step_size = 0.001
         optimizer = optim.Adam(run.model.parameters(), lr=step_size)
-        trainloader = torch_data.DataLoader(self.training_data, batch_size=batch_size, shuffle=False)
+        trainloader = torch_data.DataLoader(
+            self.training_data, batch_size=batch_size, shuffle=False
+        )
         training_losses = []
         test_losses = []
         for epoch in range(self.num_epochs):
@@ -83,15 +105,23 @@ class Experiment:
                 loss = criterion(output, batch[1:, :, :])
                 loss.backward()
                 optimizer.step()
-    
+
             if epoch == 0:
-                training_loss, test_loss = self.compute_full_loss(run, device, batch_size)
-                print(f"Initial Training Loss: {training_loss}, Initial Test Loss: {test_loss}")
+                training_loss, test_loss = self.compute_full_loss(
+                    run, device, batch_size
+                )
+                print(
+                    f"Initial Training Loss: {training_loss}, Initial Test Loss: {test_loss}"
+                )
                 training_losses.append(training_loss)
                 test_losses.append(test_loss)
             if epoch == self.num_epochs - 1:
-                training_loss, test_loss = self.compute_full_loss(run, device, batch_size)
-                print(f"Final Training Loss: {training_loss}, Final Test Loss: {test_loss}")
+                training_loss, test_loss = self.compute_full_loss(
+                    run, device, batch_size
+                )
+                print(
+                    f"Final Training Loss: {training_loss}, Final Test Loss: {test_loss}"
+                )
                 training_losses.append(training_loss)
                 test_losses.append(test_loss)
 
@@ -101,7 +131,9 @@ class Experiment:
         criterion = nn.MSELoss()
 
         training_loss = 0
-        for batch in torch_data.DataLoader(self.training_data, batch_size=batch_size, shuffle=False):
+        for batch in torch_data.DataLoader(
+            self.training_data, batch_size=batch_size, shuffle=False
+        ):
             batch = batch.to(device)
             output = run.model(batch[:-1, :, :])
             loss = criterion(output, batch[1:, :, :])
@@ -109,7 +141,9 @@ class Experiment:
         training_loss = training_loss.item()
 
         test_loss = 0
-        for batch in torch_data.DataLoader(self.test_data, batch_size=batch_size, shuffle=False):
+        for batch in torch_data.DataLoader(
+            self.test_data, batch_size=batch_size, shuffle=False
+        ):
             batch = batch.to(device)
             output = run.model(batch[:-1, :, :])
             loss = criterion(output, batch[1:, :, :])

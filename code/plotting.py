@@ -7,6 +7,7 @@ fontsize_ticks = 6
 
 default_height_to_width_ratio = (5.0**0.5 - 1.0) / 2.0
 
+
 def plot_experiment(experiment, path):
 
     final_training_losses = []
@@ -36,13 +37,15 @@ def plot_experiment(experiment, path):
     )
     return
 
+
 def plot_lineplot(axis, xdata, ydata1, ydata2, xlabel, ylabel):
     axis.set_xlabel(xlabel)
     axis.set_ylabel(ylabel)
     axis.ticklabel_format(axis="x", style="sci", scilimits=(-4, 4))
-    axis.plot(xdata, ydata1, '-k', label='Training')
-    axis.plot(xdata, ydata2, '--k', label='Test')
+    axis.plot(xdata, ydata1, "-k", label="Training")
+    axis.plot(xdata, ydata2, "--k", label="Test")
     axis.legend(fontsize=7)
+
 
 def plot_settings(
     nrows=1, ncols=1, width=6.0, height_to_width_ratio=default_height_to_width_ratio

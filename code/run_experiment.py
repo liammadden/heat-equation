@@ -25,15 +25,15 @@ n_x = 10
 n_t = 10
 c_x = 100
 c_t = 100
-r = .001
+r = 0.001
 u_min = 0
 u_max = 1
 num_samples = 100
-print("Number of data points: " + str(num_samples*(n_t-1)))
+print("Number of data points: " + str(num_samples * (n_t - 1)))
 num_epochs = 10000
 batch_size = "full"
-plot_only = False # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
-m_vals = 5*(np.arange(9)+2)
+plot_only = False  # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
+m_vals = 5 * (np.arange(9) + 2)
 
 runs = []
 # Create runs
@@ -47,7 +47,7 @@ ex = Experiment(
     n_t=n_t,
     c_x=c_x,
     c_t=c_t,
-    r = r,
+    r=r,
     u_min=u_min,
     u_max=u_max,
     num_samples=num_samples,
