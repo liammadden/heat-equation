@@ -33,12 +33,13 @@ print("Number of data points: " + str(num_samples * (n_t - 1)))
 num_epochs = 10000
 batch_size = "full"
 plot_only = False  # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
-m_vals = 5 * (np.arange(9) + 2)
+m_vals = 10 * (np.arange(20) + 1)
+lstm_size = 5
 
 runs = []
 # Create runs
 for m in m_vals:
-    run = Run(m=m)
+    run = Run(m=m, lstm_size=lstm_size)
     runs.append(run)
 
 # Run experiment

@@ -63,7 +63,10 @@ class Experiment:
                 print("-----Run " + str(run_num + 1) + "-----")
                 ### Train model
                 run.model = LSTMModel(
-                    input_size=self.n_x, hidden_size=run.m, output_size=self.n_x
+                    input_size=self.n_x,
+                    lstm_size=run.lstm_size,
+                    fnn_size=run.m,
+                    output_size=self.n_x,
                 ).to(device)
                 run.num_params = sum(p.numel() for p in run.model.parameters())
                 print("Number of parameters: " + str(run.num_params))
