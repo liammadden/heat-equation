@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.utils.data as torch_data
 from crank_nicolson import make_data
 from haven import haven_utils as hu
-from lstm_model import LSTMModel
+from lstm_model import GILRModel
 from plotting import plot_experiment
 from run import Run
 
@@ -62,7 +62,7 @@ class Experiment:
                 torch.manual_seed(0)
                 print("-----Run " + str(run_num + 1) + "-----")
                 ### Train model
-                run.model = LSTMModel(
+                run.model = GILRModel(
                     input_size=self.n_x,
                     lstm_size=run.lstm_size,
                     fnn_size=run.m,
