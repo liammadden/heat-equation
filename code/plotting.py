@@ -1,50 +1,97 @@
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import numpy as np
 
 fontsize_axis = 7
 fontsize_ticks = 6
 
 default_height_to_width_ratio = (5.0**0.5 - 1.0) / 2.0
 
-
 def plot_experiment(experiment, path):
-
-    final_training_losses = []
-    final_test_losses = []
-    num_params = []
+    
+    data_sizes = []
+    model_sizes = []
     for run in experiment.runs:
-        final_training_losses.append(run.training_losses[-1])
-        final_test_losses.append(run.test_losses[-1])
-        num_params.append(run.num_params)
+        if not (run.num_samples in data_sizes):
+            data_sizes.append(run.num_samples)
+        if not (run.num_params in model_sizes):
+            model_sizes.append(run.num_params)
+    data_sizes = np.array(data_sizes) * (experiment.n_t - 1)
+    data_sizes_rev = data_sizes[::-1]
+
+    heatmap_data = []
+    i = 0
+    for _ in data_sizes:
+        yrow = []
+        for _ in model_sizes:
+            training_loss = experiment.runs[i].training_losses[-1]
+            yrow.append(training_loss)
+            i = i + 1
+        heatmap_data.append(yrow)
+    heatmap_data_rev = heatmap_data[::-1]
+
+    eps = .005
+    mem_caps = np.zeros(len(model_sizes))
+    for i in range(len(model_sizes)):
+        mem_cap = 0
+        for j in range(len(data_sizes)):
+            training_loss = heatmap_data[j][i]
+            data_size = data_sizes[j] * (experiment.n_t - 1)
+            if training_loss < eps and data_size > mem_cap:
+                mem_cap = data_size
+        mem_caps[i] = mem_cap
 
     nrows = 1
-    ncols = 1
+    ncols = 2
     _, ax = plot_settings(nrows=nrows, ncols=ncols)
 
+    plot_heatmap(
+        axis=ax[0],
+        data=np.array(heatmap_data_rev),
+        xlabel="Number of parameters",
+        ylabel="Number of data points",
+        xticks=model_sizes,
+        yticks=data_sizes_rev,
+    )
     plot_lineplot(
-        axis=ax,
-        xdata=num_params,
-        ydata1=final_training_losses,
-        ydata2=final_test_losses,
-        xlabel="Number of Parameters",
-        ylabel="Final Loss",
+        axis=ax[1],
+        xdata=model_sizes,
+        ydata=mem_caps,
+        xlabel="Number of parameters",
+        ylabel="Estimated memory capacity",
     )
 
     plt.savefig(
-        os.path.join(path, "plots", "loss-plot" + ".pdf"),
+        os.path.join(
+            path, "plots", "plot-" + "GILR" + ".pdf"
+        ),
         bbox_inches="tight",
     )
     return
 
 
-def plot_lineplot(axis, xdata, ydata1, ydata2, xlabel, ylabel):
+def plot_heatmap(axis, data, xlabel, ylabel, xticks, yticks):
+    plot = axis.imshow(
+        data,
+        cmap="bone",
+        norm=colors.LogNorm(vmin=data.min(), vmax=data.max()),
+        aspect=0.75,
+    )
     axis.set_xlabel(xlabel)
     axis.set_ylabel(ylabel)
-    axis.ticklabel_format(axis="x", style="sci", scilimits=(-4, 4))
-    axis.plot(xdata, ydata1, "-k", label="Training")
-    axis.plot(xdata, ydata2, "--k", label="Test")
-    axis.legend(fontsize=7)
+    axis.set_xticks(range(len(xticks)), xticks)
+    axis.set_yticks(range(len(yticks)), yticks)
+    axis.tick_params(axis="x", rotation=90)
+    cbar = plt.colorbar(plot, format="%1.3g")
+    cbar.ax.tick_params()
+
+
+def plot_lineplot(axis, xdata, ydata, xlabel, ylabel):
+    axis.set_xlabel(xlabel)
+    axis.set_ylabel(ylabel)
+    axis.plot(xdata, ydata)
 
 
 def plot_settings(

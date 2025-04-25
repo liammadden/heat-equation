@@ -21,30 +21,32 @@ else:
     device = "cpu"
 
 ### Set parameters ###
-n_x = 10
-n_t = 10
-c_x = 100
-c_x = 10 #
-c_t = 100
-c_t = 10 #
-r = 0.001
-u_min = 0
-u_max = 1
-num_samples = 100
-num_samples = 10 #
-print("Number of data points: " + str(num_samples * (n_t - 1)))
+n_x = 10 # number of equispaced samples at each time step
+n_t = 10 # number of time steps
+c_x = 100 # factor of increased resolution for PDE solution
+c_x = 10 # TO DO: remove
+c_t = 100 # factor of increased resolution for PDE solution
+c_t = 10 # TO DO: remove
+r = 0.001 # thermal diffusivity * time_increment / 2 / space_increment**2
+u_min = 0 # lower limit for initial values
+u_max = 1 # upper limit for initial values
 num_epochs = 10000
+# num_epochs = 1000 # TO DO: remove
+# model = "GILR"
 batch_size = "full"
-plot_only = False  # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
-m_vals = 10 * (np.arange(20) + 1)
-m_vals = 5 * (np.arange(10) + 1)
-lstm_size = 5
+plot_only = True  # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
+lstm_size = 5 # size of RNN hidden dimension
+fnn_size_range = 10 * (np.arange(20) + 1) # size of FNN hidden dimension
+fnn_size_range = np.arange(10) + 1 # TO DO: remove
+num_samples_range = 10 * (np.arange(10) + 1) # number of data points is num_samples * (n_t - 1)
+num_samples_range = np.arange(10) + 10 # TO DO: remove
 
 runs = []
 # Create runs
-for m in m_vals:
-    run = Run(m=m, lstm_size=lstm_size)
-    runs.append(run)
+for num_samples in num_samples_range:
+    for fnn_size in fnn_size_range:
+        run = Run(fnn_size=fnn_size, lstm_size=lstm_size, num_samples = num_samples)
+        runs.append(run)
 
 # Run experiment
 ex = Experiment(
@@ -55,8 +57,9 @@ ex = Experiment(
     r=r,
     u_min=u_min,
     u_max=u_max,
-    num_samples=num_samples,
+    num_samples = np.max(num_samples_range),
     num_epochs=num_epochs,
+    # model=model,
     batch_size=batch_size,
     runs=runs,
 )
