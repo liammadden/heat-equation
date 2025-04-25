@@ -24,22 +24,24 @@ else:
 n_x = 10 # number of equispaced samples at each time step
 n_t = 10 # number of time steps
 c_x = 100 # factor of increased resolution for PDE solution
-c_x = 10 # TO DO: remove
+# c_x = 10 # TO DO: remove
 c_t = 100 # factor of increased resolution for PDE solution
-c_t = 10 # TO DO: remove
+# c_t = 10 # TO DO: remove
 r = 0.001 # thermal diffusivity * time_increment / 2 / space_increment**2
 u_min = 0 # lower limit for initial values
 u_max = 1 # upper limit for initial values
 num_epochs = 10000
 # num_epochs = 1000 # TO DO: remove
-# model = "GILR"
+model = "Attention" # LSTM, GILR, or Attention
 batch_size = "full"
-plot_only = True  # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
+plot_only = False  # change to True if you want to plot existing experimental results, assuming experiment pkl file already exists
 lstm_size = 5 # size of RNN hidden dimension
-fnn_size_range = 10 * (np.arange(20) + 1) # size of FNN hidden dimension
-fnn_size_range = np.arange(10) + 1 # TO DO: remove
+fnn_size_range = 10 * np.arange(10) + 1 # size of FNN hidden dimension, for LSTM
+fnn_size_range = 10 * np.arange(10) + 15 # for GILR
+fnn_size_range = 10 * np.arange(10) + 12 # for Attention
+# fnn_size_range = np.arange(5) + 1 # TO DO: remove
 num_samples_range = 10 * (np.arange(10) + 1) # number of data points is num_samples * (n_t - 1)
-num_samples_range = np.arange(10) + 10 # TO DO: remove
+# num_samples_range = np.arange(5) + 10 # TO DO: remove
 
 runs = []
 # Create runs
@@ -59,7 +61,7 @@ ex = Experiment(
     u_max=u_max,
     num_samples = np.max(num_samples_range),
     num_epochs=num_epochs,
-    # model=model,
+    model=model,
     batch_size=batch_size,
     runs=runs,
 )

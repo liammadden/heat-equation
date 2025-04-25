@@ -27,7 +27,7 @@ class Experiment:
     u_max: float
     num_samples: int
     num_epochs: int
-    # model: any
+    model: any
     batch_size: any
     runs: list[Run] = field(default_factory=list)
     data: any = None
@@ -54,36 +54,30 @@ class Experiment:
                 print("-----Run " + str(run_num + 1) + "-----")
                 print("Number of data points: " + str(run.num_samples * (self.n_t - 1)))
                 run.training_data = self.data[:, 0:run.num_samples, :]
-                ### Pick model
-                # if self.model == "LSTM":
-                #     run.model = LSTMModel(
-                #         input_size=self.n_x,
-                #         lstm_size=run.lstm_size,
-                #         fnn_size=run.fnn_size,
-                #         output_size=self.n_x,
-                #     ).to(device)
-                # if self.model == "GILR":
-                #     run.model = GILRModel(
-                #         input_size=self.n_x,
-                #         lstm_size=run.lstm_size,
-                #         fnn_size=run.fnn_size,
-                #         output_size=self.n_x,
-                #     ).to(device)
-                # if self.model == "Attention":
-                #     run.model = AttentionModel(
-                #         input_size=self.n_x,
-                #         attn_size=run.lstm_size,
-                #         fnn_size=run.fnn_size,
-                #         output_size=self.n_x,
-                #         max_length=n_t,
-                #         device=device,
-                #     ).to(device)
-                run.model = GILRModel(
-                    input_size=self.n_x,
-                    lstm_size=run.lstm_size,
-                    fnn_size=run.fnn_size,
-                    output_size=self.n_x,
-                ).to(device)
+                ## Pick model
+                if self.model == "LSTM":
+                    run.model = LSTMModel(
+                        input_size=self.n_x,
+                        lstm_size=run.lstm_size,
+                        fnn_size=run.fnn_size,
+                        output_size=self.n_x,
+                    ).to(device)
+                if self.model == "GILR":
+                    run.model = GILRModel(
+                        input_size=self.n_x,
+                        lstm_size=run.lstm_size,
+                        fnn_size=run.fnn_size,
+                        output_size=self.n_x,
+                    ).to(device)
+                if self.model == "Attention":
+                    run.model = AttentionModel(
+                        input_size=self.n_x,
+                        attn_size=run.lstm_size,
+                        fnn_size=run.fnn_size,
+                        output_size=self.n_x,
+                        max_length=self.n_t,
+                        device=device,
+                    ).to(device)
                 ### Train model
                 run.num_params = sum(p.numel() for p in run.model.parameters())
                 print("Number of parameters: " + str(run.num_params))

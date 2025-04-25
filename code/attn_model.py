@@ -11,7 +11,7 @@ class AttentionModel(nn.Module):
         self.attention = Attention(input_size, attn_size, device)
         self.first_layer = nn.Linear(attn_size, fnn_size)
         self.activation = nn.GELU()
-        self.second_layer = nn.Linear(attn_size, output_size)
+        self.second_layer = nn.Linear(fnn_size, output_size)
 
     def forward(self, x):
         """
@@ -30,6 +30,7 @@ class PositionalEncoding(nn.Module):
 
     def __init__(self, input_size, max_length = 5000):
         super(PositionalEncoding, self).__init__()
+        self.input_size = input_size
         pe = torch.zeros(max_length, input_size)
         position = torch.arange(0, max_length, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
@@ -45,7 +46,7 @@ class PositionalEncoding(nn.Module):
         """
 
         sequence_length = x.shape[0]
-        out = x + self.pe[: sequence_length, None, :]
+        out = x + self.pe[:,  :sequence_length, :self.input_size].transpose(0, 1)
         return out # (sequence_length, batch_size, input_size)
 
 

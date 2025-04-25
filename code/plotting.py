@@ -32,13 +32,14 @@ def plot_experiment(experiment, path):
         heatmap_data.append(yrow)
     heatmap_data_rev = heatmap_data[::-1]
 
-    eps = .005
+    eps = np.max([.001, 2*np.min(np.array(heatmap_data))])
+    print(eps)
     mem_caps = np.zeros(len(model_sizes))
     for i in range(len(model_sizes)):
         mem_cap = 0
         for j in range(len(data_sizes)):
             training_loss = heatmap_data[j][i]
-            data_size = data_sizes[j] * (experiment.n_t - 1)
+            data_size = data_sizes[j]
             if training_loss < eps and data_size > mem_cap:
                 mem_cap = data_size
         mem_caps[i] = mem_cap
@@ -65,7 +66,7 @@ def plot_experiment(experiment, path):
 
     plt.savefig(
         os.path.join(
-            path, "plots", "plot-" + "GILR" + ".pdf"
+            path, "plots", "plot-" + experiment.model + ".pdf"
         ),
         bbox_inches="tight",
     )
