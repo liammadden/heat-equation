@@ -1,5 +1,6 @@
 import torch.nn as nn
 
+
 class LSTMModel(nn.Module):
 
     def __init__(self, input_size, lstm_size, fnn_size, output_size):
@@ -14,8 +15,8 @@ class LSTMModel(nn.Module):
         x: (sequence_length, batch_size, input_size)
         """
 
-        out, _ = self.lstm(x) # (sequence_length, batch_size, lstm_size)
-        out = self.first_layer(out) # (sequence_length, batch_size, fnn_size)
+        out, _ = self.lstm(x)  # (sequence_length, batch_size, lstm_size)
+        out = self.first_layer(out)  # (sequence_length, batch_size, fnn_size)
         out = self.activation(out)
-        out = self.second_layer(out) # (sequence_length, batch_size, output_size)
-        return out # (sequence_length, batch_size, output_size)
+        out = self.second_layer(out)  # (sequence_length, batch_size, output_size)
+        return out  # (sequence_length, batch_size, output_size)

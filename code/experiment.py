@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as torch_data
+from attn_model import AttentionModel
 from crank_nicolson import make_data
+from gilr_model import GILRModel
 from haven import haven_utils as hu
 from lstm_model import LSTMModel
-from gilr_model import GILRModel
-from attn_model import AttentionModel
 from plotting import plot_experiment
 from run import Run
 
@@ -55,7 +55,7 @@ class Experiment:
                 torch.manual_seed(0)
                 print("-----Run " + str(run_num + 1) + "-----")
                 print("Number of data points: " + str(run.num_samples * (self.n_t - 1)))
-                run.training_data = self.data[:, 0:run.num_samples, :]
+                run.training_data = self.data[:, 0 : run.num_samples, :]
                 ## Pick model
                 if self.model == "LSTM":
                     run.model = LSTMModel(
@@ -122,20 +122,12 @@ class Experiment:
                 optimizer.step()
 
             if epoch == 0:
-                training_loss = self.compute_full_loss(
-                    run, device, batch_size
-                )
-                print(
-                    f"Initial Training Loss: {training_loss}"
-                )
+                training_loss = self.compute_full_loss(run, device, batch_size)
+                print(f"Initial Training Loss: {training_loss}")
                 training_losses.append(training_loss)
             if epoch == self.num_epochs - 1:
-                training_loss = self.compute_full_loss(
-                    run, device, batch_size
-                )
-                print(
-                    f"Final Training Loss: {training_loss}"
-                )
+                training_loss = self.compute_full_loss(run, device, batch_size)
+                print(f"Final Training Loss: {training_loss}")
                 training_losses.append(training_loss)
 
         return training_losses

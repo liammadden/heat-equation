@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class GILRModel(nn.Module):
 
     def __init__(self, input_size, lstm_size, fnn_size, output_size):
@@ -15,11 +16,12 @@ class GILRModel(nn.Module):
         x: (sequence_length, batch_size, input_size)
         """
 
-        out = self.lstm(x) # (sequence_length, batch_size, lstm_size)
-        out = self.first_layer(out) # (sequence_length, batch_size, fnn_size)
+        out = self.lstm(x)  # (sequence_length, batch_size, lstm_size)
+        out = self.first_layer(out)  # (sequence_length, batch_size, fnn_size)
         out = self.activation(out)
-        out = self.second_layer(out) # (sequence_length, batch_size, output_size)
-        return out # (sequence_length, batch_size, lstm_size)
+        out = self.second_layer(out)  # (sequence_length, batch_size, output_size)
+        return out  # (sequence_length, batch_size, lstm_size)
+
 
 class GILRNet(nn.Module):
 
@@ -37,7 +39,7 @@ class GILRNet(nn.Module):
         batch_size = x.shape[1]
 
         h = []
-        h.append(torch.zeros(batch_size, self.lstm_size)) # start with h_old = 0
+        h.append(torch.zeros(batch_size, self.lstm_size))  # start with h_old = 0
         # compute h sequentially
         for i in range(sequence_length):
             h_old = h[-1]
@@ -46,7 +48,8 @@ class GILRNet(nn.Module):
             h.append(h_new)
         h = torch.stack(h)[1:]
 
-        return h # (sequence_length, batch_size, lstm_size)
+        return h  # (sequence_length, batch_size, lstm_size)
+
 
 class GILRCell(nn.Module):
 
@@ -65,4 +68,4 @@ class GILRCell(nn.Module):
         i_new = torch.tanh(self.linear_i(x_new))  # (batch_size, lstm_size)
         h_new = g_new * h_old + (1 - g_new) * i_new  # (batch_size, lstm_size)
 
-        return h_new # (batch_size, lstm_size)
+        return h_new  # (batch_size, lstm_size)

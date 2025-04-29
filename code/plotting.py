@@ -1,7 +1,7 @@
 import os
 
-import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 import numpy as np
 
 fontsize_axis = 7
@@ -9,8 +9,9 @@ fontsize_ticks = 6
 
 default_height_to_width_ratio = (5.0**0.5 - 1.0) / 2.0
 
+
 def plot_experiment(experiment, path):
-    
+
     data_sizes = []
     model_sizes = []
     for run in experiment.runs:
@@ -32,7 +33,7 @@ def plot_experiment(experiment, path):
         heatmap_data.append(yrow)
     heatmap_data_rev = heatmap_data[::-1]
 
-    eps = np.max([.001, 2*np.min(np.array(heatmap_data))])
+    eps = np.max([0.001, 2 * np.min(np.array(heatmap_data))])
     print(eps)
     mem_caps = np.zeros(len(model_sizes))
     for i in range(len(model_sizes)):
@@ -65,9 +66,7 @@ def plot_experiment(experiment, path):
     )
 
     plt.savefig(
-        os.path.join(
-            path, "plots", "plot-" + experiment.model + ".pdf"
-        ),
+        os.path.join(path, "plots", "plot-" + experiment.model + ".pdf"),
         bbox_inches="tight",
     )
     return
