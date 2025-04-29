@@ -34,6 +34,8 @@ class Experiment:
 
     def run_experiment(self, plot_only, path, device):
         experiment_id = hu.hash_dict({"experiment": self})
+        print(experiment_id)
+        exit()
         if plot_only is False:
             ### Create data
             np.random.seed(0)
