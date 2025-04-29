@@ -7,7 +7,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as torch_data
+from attn_model import AttentionModel
 from crank_nicolson import make_data
+from gilr_model import GILRModel
 from haven import haven_utils as hu
 from lstm_model import LSTMModel
 from plotting import plot_experiment
@@ -25,13 +27,15 @@ class Experiment:
     u_max: float
     num_samples: int
     num_epochs: int
+    model: any
     batch_size: any
     runs: list[Run] = field(default_factory=list)
-    training_data: any = None
-    test_data: any = None
+    data: any = None
 
     def run_experiment(self, plot_only, path, device):
         experiment_id = hu.hash_dict({"experiment": self})
+        print(experiment_id)
+        exit()
         if plot_only is False:
             ### Create data
             np.random.seed(0)
@@ -45,29 +49,41 @@ class Experiment:
                 self.u_max,
                 self.num_samples,
             )
-            self.training_data = torch.tensor(u).to(torch.float32)
-            u = make_data(
-                self.n_x,
-                self.n_t,
-                self.c_x,
-                self.c_t,
-                self.r,
-                self.u_min,
-                self.u_max,
-                1000,
-            )
-            self.test_data = torch.tensor(u).to(torch.float32)
+            self.data = torch.tensor(u).to(torch.float32)
             ### Iterate runs
             for run_num, run in enumerate(self.runs):
                 torch.manual_seed(0)
                 print("-----Run " + str(run_num + 1) + "-----")
+                print("Number of data points: " + str(run.num_samples * (self.n_t - 1)))
+                run.training_data = self.data[:, 0 : run.num_samples, :]
+                ## Pick model
+                if self.model == "LSTM":
+                    run.model = LSTMModel(
+                        input_size=self.n_x,
+                        lstm_size=run.lstm_size,
+                        fnn_size=run.fnn_size,
+                        output_size=self.n_x,
+                    ).to(device)
+                if self.model == "GILR":
+                    run.model = GILRModel(
+                        input_size=self.n_x,
+                        lstm_size=run.lstm_size,
+                        fnn_size=run.fnn_size,
+                        output_size=self.n_x,
+                    ).to(device)
+                if self.model == "Attention":
+                    run.model = AttentionModel(
+                        input_size=self.n_x,
+                        attn_size=run.lstm_size,
+                        fnn_size=run.fnn_size,
+                        output_size=self.n_x,
+                        max_length=self.n_t,
+                        device=device,
+                    ).to(device)
                 ### Train model
-                run.model = LSTMModel(
-                    input_size=self.n_x, hidden_size=run.m, output_size=self.n_x
-                ).to(device)
                 run.num_params = sum(p.numel() for p in run.model.parameters())
                 print("Number of parameters: " + str(run.num_params))
-                run.training_losses, run.test_losses = self.train(run, device)
+                run.training_losses = self.train(run, device)
             with open(
                 os.path.join(path, "experiments", str(experiment_id) + ".pkl"),
                 "wb",
@@ -85,18 +101,17 @@ class Experiment:
 
     def train(self, run, device):
         if self.batch_size == "full":
-            batch_size = self.num_samples
+            batch_size = int(run.num_samples)
         else:
-            batch_size = self.batch_size
+            batch_size = int(self.batch_size)
 
         criterion = nn.MSELoss()
         step_size = 0.001
         optimizer = optim.Adam(run.model.parameters(), lr=step_size)
         trainloader = torch_data.DataLoader(
-            self.training_data, batch_size=batch_size, shuffle=False
+            run.training_data, batch_size=batch_size, shuffle=False
         )
         training_losses = []
-        test_losses = []
         for epoch in range(self.num_epochs):
             for _, batch in enumerate(trainloader):
                 batch = batch.to(device)
@@ -107,32 +122,22 @@ class Experiment:
                 optimizer.step()
 
             if epoch == 0:
-                training_loss, test_loss = self.compute_full_loss(
-                    run, device, batch_size
-                )
-                print(
-                    f"Initial Training Loss: {training_loss}, Initial Test Loss: {test_loss}"
-                )
+                training_loss = self.compute_full_loss(run, device, batch_size)
+                print(f"Initial Training Loss: {training_loss}")
                 training_losses.append(training_loss)
-                test_losses.append(test_loss)
             if epoch == self.num_epochs - 1:
-                training_loss, test_loss = self.compute_full_loss(
-                    run, device, batch_size
-                )
-                print(
-                    f"Final Training Loss: {training_loss}, Final Test Loss: {test_loss}"
-                )
+                training_loss = self.compute_full_loss(run, device, batch_size)
+                print(f"Final Training Loss: {training_loss}")
                 training_losses.append(training_loss)
-                test_losses.append(test_loss)
 
-        return training_losses, test_losses
+        return training_losses
 
     def compute_full_loss(self, run, device, batch_size):
         criterion = nn.MSELoss()
 
         training_loss = 0
         for batch in torch_data.DataLoader(
-            self.training_data, batch_size=batch_size, shuffle=False
+            run.training_data, batch_size=batch_size, shuffle=False
         ):
             batch = batch.to(device)
             output = run.model(batch[:-1, :, :])
@@ -140,14 +145,4 @@ class Experiment:
             training_loss += loss
         training_loss = training_loss.item()
 
-        test_loss = 0
-        for batch in torch_data.DataLoader(
-            self.test_data, batch_size=batch_size, shuffle=False
-        ):
-            batch = batch.to(device)
-            output = run.model(batch[:-1, :, :])
-            loss = criterion(output, batch[1:, :, :])
-            test_loss += loss
-        test_loss = test_loss.item()
-
-        return training_loss, test_loss
+        return training_loss
